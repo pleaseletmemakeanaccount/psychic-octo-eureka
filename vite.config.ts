@@ -16,4 +16,9 @@ export default defineConfig({
       "@": path.resolve(__dirname, "src"),
     },
   },
+  // Bind to every interface and accept any Host header so the game also runs when
+  // it is reached through a LAN IP, a tunnel, or a hosted preview instead of
+  // localhost. Vite otherwise rejects unknown hosts with HTTP 403.
+  server: { host: true, allowedHosts: true },
+  preview: { host: true, allowedHosts: true },
 });

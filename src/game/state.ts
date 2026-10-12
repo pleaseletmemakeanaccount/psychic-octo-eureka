@@ -1,3 +1,4 @@
+import { safeStorage } from "../safe-storage";
 import { BLOCKS, ITEMS, B, type ToolKind } from "./blocks";
 
 export type LimbKey = "head" | "torso" | "lwing" | "rwing" | "lleg" | "rleg" | "leye" | "reye";
@@ -98,7 +99,7 @@ function freshLimbs(): Record<LimbKey, Limb> {
 
 function loadScars(): { scars: Partial<Record<LimbKey, number>>; deaths: number } {
   try {
-    const s = JSON.parse(localStorage.getItem("ernas_scars") || "null");
+    const s = JSON.parse(safeStorage.getItem("ernas_scars") || "null");
     if (s) return s;
   } catch {
     /* ignore */

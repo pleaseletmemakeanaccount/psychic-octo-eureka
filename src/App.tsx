@@ -10,6 +10,7 @@ import { ChatInput, DeathPanel, HelpPanel, InventoryPanel, PylonPanel, RunePanel
 import { SleepPanel } from "./ui/Sleep";
 import { WorldPanel } from "./ui/WorldPanel";
 import { BIOME_NAMES, H, L, N } from "./game/world";
+import { safeStorage } from "./safe-storage";
 
 let initialized = false;
 
@@ -22,8 +23,8 @@ export default function App() {
     if (initialized || !mount.current) return;
     initialized = true;
     engine.init(mount.current);
-    store.s.achievement = localStorage.getItem("ernas_achievement") === "1";
-    store.s.aurora = localStorage.getItem("ernas_aurora") === "1";
+    store.s.achievement = safeStorage.getItem("ernas_achievement") === "1";
+    store.s.aurora = safeStorage.getItem("ernas_aurora") === "1";
   }, []);
 
   const start = async () => {

@@ -17,6 +17,7 @@ import {
 } from "./state";
 import { buildAtlas, setAtlasCanvas } from "./textures";
 import { basisAt, Biome, BIOME_NAMES, CH, colOf, CW, fromWorld, H, L, N, R, S, SEA, SUN_RADIUS, toWorld, uOf, World, wrapX, xScale, ZERO_G_RADIUS } from "./world";
+import { safeStorage } from "../safe-storage";
 
 const DAY_LEN = 600;
 const REACH = 6;
@@ -642,7 +643,7 @@ export class Engine {
       else if (l.hp < LIMB_MAX[k] * 0.5) s.scars[k] = Math.max(s.scars[k] ?? 0, 1);
     });
     s.deaths++;
-    localStorage.setItem("ernas_scars", JSON.stringify({ scars: s.scars, deaths: s.deaths }));
+    safeStorage.setItem("ernas_scars", JSON.stringify({ scars: s.scars, deaths: s.deaths }));
     if (this.mountForg) this.dismount();
     this.openUI("death");
   }
@@ -1414,10 +1415,10 @@ export class Engine {
   unlockAchievement() {
     const s = store.s;
     s.aurora = true;
-    localStorage.setItem("ernas_aurora", "1");
+    safeStorage.setItem("ernas_aurora", "1");
     if (!s.achievement) {
       s.achievement = true;
-      localStorage.setItem("ernas_achievement", "1");
+      safeStorage.setItem("ernas_achievement", "1");
       store.toast("🏆 ACHIEVEMENT: An Albany Expression", "You steamed processed pig meat. The Aurora Borealis now haunts the sky... forever?");
     } else store.toast("An Albany Expression", "The aurora returns.");
     store.say("A permanent Aurora Borealis ignites around the axis. Only the Chill Entity can turn it off.", "#7fffb0");
@@ -1820,7 +1821,7 @@ export class Engine {
     }
     if (low === "nyc") {
       if (this.chill && !this.chill.dead) {
-        if (s.aurora) { s.aurora = false; localStorage.removeItem("ernas_aurora"); this.chillSays("ok :] the aurora is off."); }
+        if (s.aurora) { s.aurora = false; safeStorage.removeItem("ernas_aurora"); this.chillSays("ok :] the aurora is off."); }
         else this.chillSays("nyc :]");
       } else if (s.aurora) store.say("The aurora does not listen to you. Perhaps someone chill could help... (say hey)", "#7fffb0");
       store.bump();
