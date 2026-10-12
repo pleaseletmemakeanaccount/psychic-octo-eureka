@@ -1,0 +1,327 @@
+@import "tailwindcss";
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  background: #000;
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: auto;
+}
+
+@keyframes swing {
+  0% { transform: rotate(-15deg) translateY(0); }
+  50% { transform: rotate(-55deg) translate(-30px, -10px); }
+  100% { transform: rotate(-15deg) translateY(0); }
+}
+@keyframes fadein {
+  from { opacity: 0; transform: translate(-50%, -10px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-controls {
+  touch-action: none;
+  overscroll-behavior: none;
+}
+
+.touch-look-zone {
+  position: absolute;
+  left: 43%;
+  right: 0;
+  top: 158px;
+  bottom: 174px;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.mobile-quickbar {
+  position: absolute;
+  top: max(78px, calc(env(safe-area-inset-top) + 72px));
+  left: 50%;
+  display: flex;
+  width: min(94vw, 510px);
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+  transform: translateX(-50%);
+}
+
+.mobile-quickbar button,
+.touch-control-button {
+  color: #fff;
+  background: rgba(12, 10, 18, 0.76);
+  border: 2px solid rgba(255, 255, 255, 0.48);
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.6);
+  font: 700 10px/1 monospace;
+  letter-spacing: 0.04em;
+  text-shadow: 1px 1px #000;
+  touch-action: none;
+  user-select: none;
+}
+
+.mobile-quickbar button {
+  min-height: 38px;
+  padding: 0 7px;
+  border-color: rgba(255, 210, 58, 0.55);
+}
+
+.mobile-quickbar .touch-selected {
+  border-color: #ffd23a;
+  color: #ffd23a;
+  background: rgba(88, 65, 10, 0.9);
+}
+
+.atlas-tabs, .atlas-actions, .atlas-times {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0;
+  font-size: 12px;
+}
+.atlas-tabs button, .atlas-actions button, .encounter-row button {
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid #695776;
+  background: #16111f;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.atlas-tabs button[aria-pressed="true"] { color: #ffd23a; border-color: #ffd23a; }
+.atlas-actions button:hover, .encounter-row button:hover { border-color: #ffd23a; }
+.encounter-row button:disabled { opacity: 0.3; cursor: default; }
+.atlas-times { justify-content: space-between; color: #a9b4ca; font-size: 11px; }
+.weather-map { width: 100%; height: auto; max-height: 45vh; object-fit: fill; border: 1px solid #796686; touch-action: none; cursor: crosshair; }
+.atlas-note { color: #b2a9c1; font-size: 12px; line-height: 1.6; margin: 12px 0; }
+.encounter-row { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid #3b3048; }
+.encounter-row > div { flex: 1; }
+.encounter-row strong { font-size: 13px; letter-spacing: 0.04em; }
+.encounter-row p { font-size: 11px; color: #b2a9c1; line-height: 1.5; margin: 4px 0 0; }
+.encounter-index { color: #a087c4; font-size: 13px; }
+.ernas-panel { touch-action: pan-y; overscroll-behavior: contain; }
+@media (max-width: 650px) {
+  .inventory-grid { grid-template-columns: repeat(6, minmax(0, 1fr)) !important; }
+  .inventory-grid > button { width: 100%; height: 48px; }
+  .encounter-index { display: none; }
+  .encounter-row { gap: 6px; }
+  .encounter-row button { padding: 6px; font-size: 10px; }
+  .atlas-times { font-size: 10px; }
+  .ernas-boss-bar { top: 154px; max-width: 92vw; }
+}
+
+.mobile-quickbar button:active,
+.touch-control-button:active {
+  background: rgba(255, 210, 58, 0.55);
+  color: #fff;
+  transform: translateY(2px);
+}
+
+.touch-joystick {
+  position: absolute;
+  left: max(14px, calc(env(safe-area-inset-left) + 10px));
+  bottom: max(62px, calc(env(safe-area-inset-bottom) + 56px));
+  width: 132px;
+  height: 132px;
+  border: 2px solid rgba(255, 255, 255, 0.42);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(60, 55, 70, 0.48), rgba(5, 5, 10, 0.58));
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.6), 0 4px 15px rgba(0, 0, 0, 0.35);
+  touch-action: none;
+}
+
+.touch-joystick-cross {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.17);
+  pointer-events: none;
+}
+
+.touch-joystick-cross-x {
+  left: 15%;
+  right: 15%;
+  top: 50%;
+  height: 1px;
+}
+
+.touch-joystick-cross-y {
+  top: 15%;
+  bottom: 15%;
+  left: 50%;
+  width: 1px;
+}
+
+.touch-joystick-thumb {
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  top: 50%;
+  width: 52px;
+  height: 52px;
+  margin: -26px;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  background: rgba(180, 160, 210, 0.48);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+
+.touch-joystick-label {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 10px;
+  color: rgba(255, 255, 255, 0.52);
+  text-align: center;
+  font: 9px monospace;
+  letter-spacing: 0.2em;
+  pointer-events: none;
+}
+
+.touch-actions {
+  position: absolute;
+  right: max(14px, calc(env(safe-area-inset-right) + 10px));
+  bottom: max(66px, calc(env(safe-area-inset-bottom) + 60px));
+  display: grid;
+  grid-template-columns: 62px 62px;
+  grid-template-rows: 62px 62px;
+  gap: 7px;
+}
+
+.touch-control-button {
+  min-width: 56px;
+  min-height: 56px;
+  border-radius: 50%;
+  background: rgba(10, 8, 14, 0.72);
+}
+
+.touch-mine {
+  grid-column: 1;
+  grid-row: 1;
+  width: 62px;
+  height: 62px;
+  border-color: rgba(255, 110, 90, 0.85);
+}
+
+.touch-use {
+  grid-column: 2;
+  grid-row: 1;
+  width: 54px;
+  height: 54px;
+  align-self: end;
+  border-color: rgba(255, 210, 58, 0.85);
+}
+
+.touch-jump {
+  grid-column: 1;
+  grid-row: 2;
+  width: 62px;
+  height: 62px;
+  border-color: rgba(120, 220, 255, 0.85);
+}
+
+.touch-down {
+  grid-column: 2;
+  grid-row: 2;
+  width: 50px;
+  height: 50px;
+  align-self: end;
+  border-color: rgba(180, 170, 210, 0.8);
+}
+
+.touch-sprint {
+  position: absolute;
+  left: -50px;
+  top: 50%;
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  border-color: rgba(120, 255, 150, 0.8);
+}
+
+.mobile-mode-label {
+  position: absolute;
+  right: max(12px, env(safe-area-inset-right));
+  bottom: max(202px, calc(env(safe-area-inset-bottom) + 194px));
+  color: rgba(255, 255, 255, 0.55);
+  font: 8px monospace;
+  pointer-events: none;
+}
+
+@media (max-width: 700px), (pointer: coarse) {
+  .ernas-body-hud,
+  .ernas-chat-feed,
+  .ernas-held-item {
+    display: none !important;
+  }
+
+  .ernas-top-info {
+    top: max(8px, env(safe-area-inset-top)) !important;
+    left: max(8px, env(safe-area-inset-left)) !important;
+    font-size: 9px !important;
+  }
+
+  .ernas-top-info > div:first-child {
+    font-size: 12px !important;
+  }
+
+  .ernas-biome,
+  .ernas-coordinates,
+  .ernas-perf {
+    display: none;
+  }
+
+  .ernas-status-panel {
+    top: max(7px, env(safe-area-inset-top)) !important;
+    right: max(8px, env(safe-area-inset-right)) !important;
+    transform: scale(0.74);
+    transform-origin: top right;
+  }
+
+  .ernas-hotbar {
+    bottom: max(5px, env(safe-area-inset-bottom)) !important;
+  }
+
+  .ernas-hotbar > div:last-child {
+    gap: 2px !important;
+    padding: 3px !important;
+  }
+
+  .ernas-hotbar-slot {
+    width: clamp(29px, 8.7vw, 36px) !important;
+    height: clamp(29px, 8.7vw, 36px) !important;
+    overflow: hidden;
+  }
+
+  .ernas-hotbar-slot > div {
+    transform: scale(0.76);
+  }
+}
+
+@media (max-height: 480px) and (pointer: coarse) {
+  .touch-look-zone {
+    top: 112px;
+    bottom: 80px;
+  }
+
+  .mobile-quickbar {
+    top: max(66px, calc(env(safe-area-inset-top) + 60px));
+  }
+
+  .touch-joystick {
+    width: 112px;
+    height: 112px;
+    bottom: max(48px, calc(env(safe-area-inset-bottom) + 44px));
+  }
+
+  .touch-actions {
+    transform: scale(0.84);
+    transform-origin: bottom right;
+    bottom: max(54px, calc(env(safe-area-inset-bottom) + 48px));
+  }
+}
