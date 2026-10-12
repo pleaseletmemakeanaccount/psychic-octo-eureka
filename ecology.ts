@@ -62,54 +62,31 @@ export class Fish extends Entity {
   drops() { return [{ item: "raw_fish", count: 1 }]; }
 }
 
-export type SkyKind = "owl" | "sky_squirrel" | "cloud_serpent" | "wyrm" | "geometry";
+/** The only flyer left in the ring: owls. Sky squirrels, cloud serpents, wyrms and geometric watchers are gone. */
 export class SkyCreature extends Entity {
   tamed = false;
   private age = Math.random() * 30;
   private home: THREE.Vector3;
-  private attack = 2;
-  private provoked = 0;
-  private segments: THREE.Object3D[] = [];
-  constructor(x: number, y: number, z: number, public type: SkyKind) {
+  private wings: THREE.Object3D[] = [];
+  constructor(x: number, y: number, z: number) {
     super(x, y, z);
-    this.home = this.pos.clone(); this.kind = type; this.gravity = false;
+    this.home = this.pos.clone(); this.kind = "owl"; this.gravity = false;
     this.height = 1; this.radius = 0.8;
-    // Wyrms drift peacefully now and only retaliate if you attack them.
-    this.hostile = type !== "owl" && type !== "wyrm";
-    this.hp = this.maxHp = type === "wyrm" ? 95 : type === "geometry" ? 60 : 24;
-    this.label = { owl: "Owl", sky_squirrel: "Sky Squirrel", cloud_serpent: "Cloud Serpent", wyrm: "Sky-ring Wyrm", geometry: "Perfect Geometric Watcher" }[type];
-    if (type === "owl") {
-      this.group.add(birdModel("#ad9273", "#ddcb88", true));
-      for (const s of [-1, 1]) this.segments.push(box(this.group, 0.5, 0.08, 0.42, "#826646", s * 0.4, 0.45, 0));
-    } else if (type === "sky_squirrel") {
-      box(this.group, 0.35, 0.6, 0.3, "#9e713f", 0, 0.4, 0);
-      box(this.group, 0.3, 0.3, 0.3, "#c99658", 0, 0.85, 0.12);
-      box(this.group, 0.14, 0.8, 0.22, "#ba976a", 0, 0.5, -0.35);
-      box(this.group, 1.2, 0.04, 0.6, "#b8ad96", 0, 0.2, 0);
-    } else if (type === "geometry") {
-      const shape = new THREE.Mesh(new THREE.TorusKnotGeometry(0.7, 0.16, 96, 12), mat("#eae5cc", { emissive: true }));
-      this.group.add(shape); this.segments.push(shape);
-    } else {
-      const size = type === "wyrm" ? 1.6 : 0.65;
-      const count = type === "wyrm" ? 11 : 7;
-      for (let i = 0; i < count; i++) this.segments.push(box(this.group, size * (1 - i * 0.04), size, size, i % 2 ? "#456278" : "#91b9c3", 0, 0, -i * size * 0.85));
-      box(this.group, size * 0.3, size * 0.2, 0.12, mat("#ffd990", { emissive: true }), -size * 0.3, size * 0.2, size * 0.51);
-      box(this.group, size * 0.3, size * 0.2, 0.12, mat("#ffd990", { emissive: true }), size * 0.3, size * 0.2, size * 0.51);
-      this.radius = size; this.height = size;
-    }
+    this.hostile = false;
+    this.hp = this.maxHp = 24;
+    this.label = "Owl";
+    this.group.add(birdModel("#ad9273", "#ddcb88", true));
+    for (const s of [-1, 1]) this.wings.push(box(this.group, 0.5, 0.08, 0.42, "#826646", s * 0.4, 0.45, 0));
   }
   update(dt: number, ctx: Ctx) {
-    this.age += dt; this.attack -= dt; this.hurtT = Math.max(0, this.hurtT - dt);
-    this.provoked = Math.max(0, this.provoked - dt);
-    const angry = this.hostile || this.provoked > 0;
+    this.age += dt; this.hurtT = Math.max(0, this.hurtT - dt);
     const d = gdelta(this.pos.x, this.pos.y, this.pos.z, ctx.player.x, ctx.player.y + 2, ctx.player.z);
-    const follow = (this.tamed || angry) && d.dist < 65;
+    const follow = this.tamed && d.dist < 65;
     const target = follow ? ctx.player : this.home;
     this.faceToward(target.x, target.z);
     if (!follow) this.yaw += Math.sin(this.age * 0.25) * 1.8;
-    // A calm wyrm cruises slowly and keeps its distance.
-    const speed = this.type === "wyrm" ? (angry ? 5 : 2.2) : this.type === "cloud_serpent" ? 4.5 : 2.5;
-    const destinationY = follow ? ctx.player.y + (this.tamed ? 3 : 2) : this.home.y + Math.sin(this.age * 0.3) * 5;
+    const speed = 2.5;
+    const destinationY = follow ? ctx.player.y + 3 : this.home.y + Math.sin(this.age * 0.3) * 5;
     const next = this.pos.clone();
     next.x = wrapX(next.x + Math.sin(this.yaw) * speed * dt / xScale(next.y));
     next.z = THREE.MathUtils.clamp(next.z + Math.cos(this.yaw) * speed * dt, 2, L - 2);
@@ -117,30 +94,15 @@ export class SkyCreature extends Entity {
     if (isSolid(ctx.world.getF(next.x, next.y, next.z))) next.y += dt * 9;
     this.pos.copy(next);
     if (this.tamed && d.dist > 55) this.pos.copy(ctx.player).add(new THREE.Vector3(0, 4, 1));
-    if (angry && !this.tamed && d.dist < 26 && this.attack <= 0) {
-      this.attack = this.type === "wyrm" ? 5.5 : 3.2;
-      if (this.type === "geometry") {
-        ctx.playerVel.y += 6;
-        if (d.dist < 7) ctx.damagePlayer(4, "geometric gravity shear");
-      } else fireAtPlayer(this, ctx, this.type === "wyrm" ? 4 : 3, 17, "#8be0ee");
-    }
     this.sync();
-    this.segments.forEach((part, i) => {
-      if (this.type === "owl") part.rotation.z = Math.sin(this.age * 12) * (i === 0 ? 1 : -1) * 0.7;
-      else if (this.type === "geometry") part.rotation.set(this.age, this.age * 0.6, 0);
-      else part.position.x = Math.sin(this.age * 3 - i * 0.5) * i * 0.12;
-    });
-  }
-  hurt(amount: number, ctx: Ctx, source?: string) {
-    if (this.type === "wyrm" && !this.tamed) this.provoked = 14;
-    super.hurt(amount, ctx, source);
+    this.wings.forEach((wing, i) => { wing.rotation.z = Math.sin(this.age * 12) * (i === 0 ? 1 : -1) * 0.7; });
   }
   interact(ctx: Ctx, held: string | null) {
-    if (this.type === "owl" && held === "mouse" && !this.tamed) {
+    if (held === "mouse" && !this.tamed) {
       this.tamed = true; this.label = "Pet Owl"; ctx.say("The owl accepts the mouse and follows you.", "#d1bd92"); return "consume";
     }
   }
-  drops() { return [{ item: "feather", count: this.type === "wyrm" ? 8 : 2 }]; }
+  drops() { return [{ item: "feather", count: 2 }]; }
 }
 
 export class BoneThief extends Entity {
