@@ -1,4 +1,5 @@
 import { BLOCKS, ITEMS, B, type ToolKind } from "./blocks";
+import { readSet } from "../storage";
 
 export type LimbKey = "head" | "torso" | "lwing" | "rwing" | "lleg" | "rleg" | "leye" | "reye";
 export const LIMB_NAMES: Record<LimbKey, string> = {
@@ -98,7 +99,7 @@ function freshLimbs(): Record<LimbKey, Limb> {
 
 function loadScars(): { scars: Partial<Record<LimbKey, number>>; deaths: number } {
   try {
-    const s = JSON.parse(localStorage.getItem("ernas_scars") || "null");
+    const s = JSON.parse(readSet("ernas_scars") || "null");
     if (s) return s;
   } catch {
     /* ignore */

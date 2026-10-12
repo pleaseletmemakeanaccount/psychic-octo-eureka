@@ -15,6 +15,7 @@ import { checkSkyIslands, checkWorld } from "./regression";
 import {
   addItem, consumeSelected, LIMB_MAX, LIMB_NAMES, removeItem, resetLimbs, RUNES, sortInventory, stackName, store, type ItemStack, type LimbKey, type RuneId,
 } from "./state";
+import { dropKey, writeFlag, writeSet } from "../storage";
 import { buildAtlas, setAtlasCanvas } from "./textures";
 import { basisAt, Biome, BIOME_NAMES, CH, colOf, CW, fromWorld, H, L, N, R, S, SEA, SUN_RADIUS, toWorld, uOf, World, wrapX, xScale, ZERO_G_RADIUS } from "./world";
 
@@ -642,7 +643,7 @@ export class Engine {
       else if (l.hp < LIMB_MAX[k] * 0.5) s.scars[k] = Math.max(s.scars[k] ?? 0, 1);
     });
     s.deaths++;
-    localStorage.setItem("ernas_scars", JSON.stringify({ scars: s.scars, deaths: s.deaths }));
+    writeSet("ernas_scars", JSON.stringify({ scars: s.scars, deaths: s.deaths }));
     if (this.mountForg) this.dismount();
     this.openUI("death");
   }
@@ -1414,10 +1415,10 @@ export class Engine {
   unlockAchievement() {
     const s = store.s;
     s.aurora = true;
-    localStorage.setItem("ernas_aurora", "1");
+    writeFlag("ernas_aurora");
     if (!s.achievement) {
       s.achievement = true;
-      localStorage.setItem("ernas_achievement", "1");
+      writeFlag("ernas_achievement");
       store.toast("🏆 ACHIEVEMENT: An Albany Expression", "You steamed processed pig meat. The Aurora Borealis now haunts the sky... forever?");
     } else store.toast("An Albany Expression", "The aurora returns.");
     store.say("A permanent Aurora Borealis ignites around the axis. Only the Chill Entity can turn it off.", "#7fffb0");
@@ -1820,7 +1821,7 @@ export class Engine {
     }
     if (low === "nyc") {
       if (this.chill && !this.chill.dead) {
-        if (s.aurora) { s.aurora = false; localStorage.removeItem("ernas_aurora"); this.chillSays("ok :] the aurora is off."); }
+        if (s.aurora) { s.aurora = false; dropKey("ernas_aurora"); this.chillSays("ok :] the aurora is off."); }
         else this.chillSays("nyc :]");
       } else if (s.aurora) store.say("The aurora does not listen to you. Perhaps someone chill could help... (say hey)", "#7fffb0");
       store.bump();
@@ -1918,7 +1919,12 @@ export class Engine {
   // ================= LAN (BroadcastChannel peer-to-peer between local sessions) =================
   setupLan() {
     if (typeof BroadcastChannel === "undefined") return;
-    this.lan = new BroadcastChannel("ernas-aligned-weather-2400-v1");
+    try {
+      this.lan = new BroadcastChannel("ernas-aligned-weather-2400-v1");
+    } catch {
+      // Blocked for opaque origins (a page opened from file://), so play alone instead of failing.
+      return;
+    }
     this.lan.onmessage = (ev) => {
       const m = ev.data;
       if (!m || m.from === this.peerId) return;
