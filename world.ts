@@ -13,6 +13,9 @@ export const R = N / (2 * Math.PI);
 export const SEA = 30;
 export const SUN_RADIUS = 14;
 export const ZERO_G_RADIUS = 30;
+// How hard the local noise field pushes surface elevation. Every biome scales `detail`
+// by its own factor, so this single knob raises or lowers noise-driven relief everywhere.
+export const ELEVATION_NOISE = 3.5;
 
 export const NY: number[] = [];
 export const MY: number[] = [];
@@ -570,7 +573,9 @@ export class World {
         const z = Math.min(L - 1, (iz + 0.5) * CLIMATE_STEP);
         const bn = p.fbm(cx * 0.72 + 10, sx * 0.72, z * 0.00135, 3) * 1.6;
         const bn2 = p2.fbm(cx * 1.04, sx * 1.04 + 5, z * 0.0021, 2) * 1.5;
-        const detail = p.fbm(cx * R * 0.035, sx * R * 0.035, z * 0.035, 3);
+        const roughness = p.fbm(cx * R * 0.035, sx * R * 0.035, z * 0.035, 3);
+        // Elevation only: ELEVATION_NOISE lifts how much of the relief comes from noise.
+        const detail = roughness * ELEVATION_NOISE;
         const region = p2.fbm(cx * 0.95 + 16, sx * 0.95 - 23, z * 0.00155, 3) * 1.75;
         // Separate macro and local maps: climate zones drift slowly so hot and frozen
         // regions are always separated by temperate ground instead of touching.
@@ -670,7 +675,7 @@ export class World {
         h = THREE.MathUtils.lerp(46, h, blend);
         const hi = Math.max(5, Math.min(H - 20, Math.floor(h)));
         let flags = 0;
-        if ((biome === Biome.SPIKED || biome === Biome.BROKEN || biome === Biome.VOLCANIC) && detail < -0.28) flags |= F_BLOOD;
+        if ((biome === Biome.SPIKED || biome === Biome.BROKEN || biome === Biome.VOLCANIC) && roughness < -0.28) flags |= F_BLOOD;
         if ((biome === Biome.TAIGA || biome === Biome.REDWOOD || biome === Biome.JUNGLE || biome === Biome.RAINFOREST) && hash3(ix, 7, iz) < 0.08) flags |= F_SINK;
         if (biome === Biome.VOLCANIC && hash3(ix, 73, iz) < 0.025) flags |= F_VENT;
         if ((biome === Biome.DESERT && hash3(ix, 83, iz) < 0.07) || biome === Biome.SALT_FLATS) flags |= F_SALT;

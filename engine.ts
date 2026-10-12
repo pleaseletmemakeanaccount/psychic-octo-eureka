@@ -9,7 +9,7 @@ import { auroraMaterial, glowSpriteTexture, sunMaterial, voidSkyMaterial } from 
 import { TerrainLOD } from "./terrain-lod";
 import { SkyIslands, skyShadowLight, type Island } from "./sky-islands";
 import { WeatherSystem } from "./weather";
-import { BoneThief, DoomWalker, Fish, RoundGolem, SkyCreature, type SkyKind } from "./ecology";
+import { BoneThief, DoomWalker, Fish, RoundGolem, SkyCreature } from "./ecology";
 import { AdvancedBoss, BOSS_ORDER, BOSS_TIPS, type BossName } from "./bosses";
 import { checkSkyIslands, checkWorld } from "./regression";
 import {
@@ -1594,13 +1594,10 @@ export class Engine {
     }
     const flying = this.entities.filter((e) => e instanceof SkyCreature).length;
     if (flying < 5 && Math.random() < 0.35) {
-      const high = this.pos.y > H - 18;
-      const type: SkyKind = high
-        ? (["cloud_serpent", "sky_squirrel", "wyrm"] as const)[Math.floor(Math.random() * 3)]
-        : this.isNight && Math.random() < 0.3 ? "geometry" : "owl";
+      // Owls are the only flyers now: sky squirrels, cloud serpents, wyrms and geometric watchers were removed.
       const u = wrapX(this.pos.x + (Math.random() - 0.5) * 60);
       const z = Math.max(3, Math.min(L - 3, this.pos.z + (Math.random() - 0.5) * 60));
-      this.addEntity(new SkyCreature(u, Math.max(this.pos.y + 9, this.world.heightAt(u, z) + 9), z, type));
+      this.addEntity(new SkyCreature(u, Math.max(this.pos.y + 9, this.world.heightAt(u, z) + 9), z));
     }
     if (this.isNight && !this.entities.some((e) => e instanceof BoneThief) && Math.random() < 0.18) this.spawnNear((x, y, z) => new BoneThief(x, y, z), 18, 34);
     if ((this.weather.model.tideActive || store.s.day >= 3) && !this.entities.some((e) => e instanceof DoomWalker) && Math.random() < 0.04) this.spawnNear((x, y, z) => new DoomWalker(x, y, z), 38, 60);
